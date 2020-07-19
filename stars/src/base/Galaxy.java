@@ -1,34 +1,48 @@
 package base;
 
+import static java.lang.Math.pow;
+import static java.lang.Math.sqrt;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Toolkit;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import static java.lang.Math.sqrt;
-import static java.lang.Math.pow;
 
 public class Galaxy extends JFrame{
-	static final short WIDTH = 400;
-	static final short HEIGHT = 400;
-	static final short NAUGHT_TO_CORNER = 
-			(short) sqrt(pow((WIDTH/2), 2) + pow((HEIGHT/2), 2));
+	private static final long serialVersionUID = 1L;
+	final short WIDTH;
+	final short HEIGHT;
+	static final short REFRESH_DELAY = 32;
+	final short NAUGHT_TO_CORNER;
 	
 	public static void main(String[] args) {
 		new Galaxy();
 	}
 	
 	Galaxy(){
-		setSize(WIDTH, HEIGHT);
+		setUndecorated(true);
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		setSize(screenSize);
+		
+		WIDTH = (short) screenSize.width;
+		HEIGHT = (short) screenSize.height;
+		NAUGHT_TO_CORNER = (short) (sqrt(pow((WIDTH/2), 2) + pow((HEIGHT/2), 2)) * 1.5);
+		
 		setLayout(new GridLayout(1,1));
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setResizable(false);
 		
-		class GalaxyView extends JPanel{
-			private final static short STAR_COUNT = 10;
+		Star.setGalaxy(this);
+		
+		class GalaxyWindow extends JPanel{
+			private static final long serialVersionUID = 1L;
+			private final static short STAR_COUNT = 25;
 			final Star[] STARS = new Star[STAR_COUNT];
 			
 			@Override
@@ -36,14 +50,14 @@ public class Galaxy extends JFrame{
 				super.paint(g);
 				Graphics2D g2 = (Graphics2D) g;
 				g2.setColor(Color.WHITE);
-				g2.translate(Galaxy.WIDTH/2, Galaxy.HEIGHT/2);
-				g2.setStroke(new BasicStroke(1));
+				g2.translate(Galaxy.this.WIDTH/2, Galaxy.this.HEIGHT/2);
+				g2.setStroke(new BasicStroke(0.25f));
 				for(int it = 0; it < STAR_COUNT; ++it) {
 					STARS[it].paintStar_Trail(g2);
 				}
 			}
 			
-			GalaxyView(){
+			GalaxyWindow(){
 				for ( int it = 0; it < STAR_COUNT; ++it)
 					STARS[it] = new Star();
 				
@@ -51,21 +65,22 @@ public class Galaxy extends JFrame{
 				
 				new Thread(() -> {
 					while (true) {
-						for ( int it = 0; it < STAR_COUNT; ++it) {
+						for ( int it = 0; it < STAR_COUNT; ++it)
+						{
 							STARS[it].update();
-							
-							try {
-								Thread.sleep(8);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}this.repaint();
+						}
+						try {
+							Thread.sleep(REFRESH_DELAY);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						this.repaint();
 					}
 				}).start();
 			}
 		}
 		
-		add(new GalaxyView());
+		add(new GalaxyWindow());
 		
 		setVisible(true);
 	}
