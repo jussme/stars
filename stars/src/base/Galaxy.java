@@ -1,6 +1,7 @@
 package base;
 
 import static java.lang.Math.pow;
+import static java.lang.Math.random;
 import static java.lang.Math.sqrt;
 
 import java.awt.BasicStroke;
@@ -14,7 +15,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 public class Galaxy extends JFrame{
@@ -24,8 +24,37 @@ public class Galaxy extends JFrame{
 	final short HEIGHT;
 	final short NAUGHT_TO_CORNER;
 	
-	public static void main(String[] args) {
-		new Galaxy();
+	private class Star {
+		private final Galaxy parentGalaxy;
+		private double sx;
+		private double sy;
+		private double z;
+		
+		Star(Galaxy galaxy){
+			parentGalaxy = galaxy;
+			
+			recycle();
+		}
+		
+		public void paintStar_Trail(Graphics2D g) {
+			float galaxyWidthByDepth = (float) (parentGalaxy.HEIGHT/z);
+			int x = (int) (galaxyWidthByDepth * sx);
+			int y = (int) (galaxyWidthByDepth * sy);
+			short radius = (short) (3 * galaxyWidthByDepth);
+			g.fillOval((int)(x-radius/2), (int)(y-radius/2), radius, radius);
+			//g.drawLine( x, y, (int) sx, (int) sy);
+		}
+		
+		void update() {
+			if(--z < 0)
+				recycle();
+		}
+		
+		void recycle() {
+			sx = (short) (random() * parentGalaxy.WIDTH - parentGalaxy.WIDTH/2);
+			sy = (short) (random() * parentGalaxy.HEIGHT - parentGalaxy.HEIGHT/2);
+			z = random() * (parentGalaxy.HEIGHT*2 - 1) + 1;
+		}
 	}
 	
 	Galaxy(){
@@ -43,7 +72,7 @@ public class Galaxy extends JFrame{
 		
 		class GalaxyWindow extends JPanel{
 			private static final long serialVersionUID = 1L;
-			private final static short STAR_COUNT = 1;
+			private final static short STAR_COUNT = 35;
 			final Star[] STARS = new Star[STAR_COUNT];
 			
 			@Override
@@ -56,7 +85,6 @@ public class Galaxy extends JFrame{
 				for(int it = 0; it < STAR_COUNT; ++it) {
 					STARS[it].paintStar_Trail(g2);
 				}
-				g2.drawOval(0, 0, 3, 3);
 			}
 			
 			GalaxyWindow(){
